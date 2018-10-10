@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -113,7 +113,15 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS
+    # get user_id from CURR_USER_KEY in session
+    user_id = session[CURR_USER_KEY]
+    user = User.query.get(user_id)
+
+    do_logout()
+
+    flash(f'Logged out {user.username}')
+
+    return redirect("/login")
 
 
 ##############################################################################
@@ -202,7 +210,26 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    user_id = session[CURR_USER_KEY]  # <------------------------ REFACTOR
+    user = User.query.get(user_id)
+
+    form = UserEditForm(obj=user)
+
+    if form.validate_on_submit:
+        if not User.authenticate(user.username, form.data['password']):
+            flash("Incorrect password")
+
+        else:
+            user.username = form.data['username']
+            user.email = form.data['email']
+            user.image_url = form.data['image_url']
+            user.header_image_url = form.data['header_image_url']
+            user.bio = form.data['bio']
+
+            db.session.commit()
+            return redirect(f"/users/{user_id}")
+
+    return render_template('users/edit.html', form=form)
 
 
 @app.route('/users/delete', methods=["POST"])
@@ -285,8 +312,11 @@ def homepage():
     if g.user:
         following_ids = [f.id for f in g.user.following] + [g.user.id]
 
+        # print("\n\n\n", g.user.following.messages, "\n\n\n")
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
