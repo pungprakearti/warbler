@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Like
 
 CURR_USER_KEY = "curr_user"
 
@@ -23,6 +23,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+
+db.create_all()
 
 
 ##############################################################################
@@ -295,6 +297,29 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
+
+##############################################################################
+# Like routes:
+
+
+@app.route('/messages/<int:message_id>/like', methods=["POST"])
+def like_message(message_id):
+    """Like a message."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/login")
+
+    message = Message.query.get(message_id)
+
+    if not g.user.id == message.user_id:
+        like = Like(user_id=g.user.id, message_id=message_id)
+        db.session.add(like)
+        db.session.commit()
+        return redirect("/")
+
+    flash("You can't like your messages. You noob.")
+    return redirect("/")
 
 
 ##############################################################################

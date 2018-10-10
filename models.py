@@ -82,6 +82,8 @@ class User(db.Model):
         backref=db.backref('following', lazy='dynamic'),
         lazy='dynamic')
 
+    likes = db.relationship('Like', backref='users', lazy='dynamic')
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -161,6 +163,19 @@ class Message(db.Model):
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
     )
+
+    likes = db.relationship('Like', backref='messages', lazy='dynamic')
+
+
+class Like(db.Model):
+    """Messages liked by user."""
+
+    __tablename__ = 'likes'
+
+    user_id = db.Column(db.Integer, db.ForeignKey(
+        'users.id', ondelete="cascade"), primary_key=True)
+    message_id = db.Column(db.Integer, db.ForeignKey(
+        'messages.id', ondelete="cascade"), primary_key=True)
 
 
 def connect_db(app):
