@@ -88,9 +88,7 @@ class User(db.Model):
         'Message',
         secondary='likes',
         backref=db.backref('likes_user', lazy='dynamic'),
-        lazy='dynamic')  # liking_users
-
-    # liked_messages = db.relationhip()  # liking_users, likers
+        lazy='dynamic')
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -181,7 +179,10 @@ class Message(db.Model):
     def is_liked_by(cls, user, message):
         """Checks if message is liked by user."""
 
-        like = Like.query.get((user.id, message.id)) or None
+        try:
+            like = Like.query.get((user.id, message.id))
+        except AttributeError:
+            return None
 
         return like
 
