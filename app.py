@@ -314,6 +314,7 @@ def like_or_unlike_message(message_id):
 
     if g.user.id == message.user_id:
         flash("You can't like your messages. You noob.")
+
     else:
         like = Message.is_liked_by(g.user, message)
         if like:
@@ -324,6 +325,8 @@ def like_or_unlike_message(message_id):
             # Add like
             like = Like(user_id=g.user.id, message_id=message_id)
             db.session.add(like)
+            # g.user.liked_messages.append(message)
+            # or   message.likers.append(user)
             db.session.commit()
 
     return redirect("/")
@@ -353,8 +356,6 @@ def homepage():
 
     if g.user:
         following_ids = [f.id for f in g.user.following] + [g.user.id]
-
-        # print("\n\n\n", g.user.following.messages, "\n\n\n")
 
         messages = (Message
                     .query

@@ -88,7 +88,7 @@ class User(db.Model):
         'Message',
         secondary='likes',
         backref=db.backref('likes_user', lazy='dynamic'),
-        lazy='dynamic')
+        lazy='dynamic')  # liking_users
 
     # liked_messages = db.relationhip()  # liking_users, likers
 
@@ -173,6 +173,9 @@ class Message(db.Model):
     )
 
     likes = db.relationship('Like', backref='messages', lazy='dynamic')
+
+    def joel_is_liked_by(self, user):
+        ...
 
     @classmethod
     def is_liked_by(cls, user, message):
