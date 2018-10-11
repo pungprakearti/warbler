@@ -177,7 +177,8 @@ class Message(db.Model):
 
     @classmethod
     def is_liked_by(cls, user, message):
-        """Checks if message is liked by user."""
+        """Checks if message is liked by user. If it is, like is
+        object is returned. If not, None is returned"""
 
         try:
             like = Like.query.get((user.id, message.id))

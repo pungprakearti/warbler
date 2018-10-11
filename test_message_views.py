@@ -15,7 +15,7 @@ from models import db, connect_db, Message, User
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+os.environ['DATABASE_URL'] = "postgresql:///warbler_app_test"
 
 
 # Now we can import app
@@ -64,6 +64,7 @@ class MessageViewTestCase(TestCase):
             # Now, that session setting is saved, so we can have
             # the rest of ours test
 
+            # messages_add
             resp = c.post("/messages/new", data={"text": "Hello"})
 
             # Make sure it redirects
@@ -71,3 +72,36 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_show_message(self):
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+        resp = c.post("/messages/new", data={"text": "Hello"})
+
+        msg = Message.query.one()
+
+        new_resp = c.get(f'/messages/{msg.id}')
+
+        self.assertEqual(new_resp.status_code, 200)
+        self.assertIn(b"Hello", new_resp.data)
+        self.assertNotIn(b"12341532534", new_resp.data)
+
+    def test_destroy_message(self):
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+        resp = c.post("/messages/new", data={"text": "Hello"})
+
+        msg = Message.query.one()
+
+        new_resp = c.post(f'/messages/{msg.id}/delete')
+
+        new_msg = Message.query.all()
+
+        self.assertEqual(new_resp.status_code, 302)
+        self.assertEqual(new_msg, [])

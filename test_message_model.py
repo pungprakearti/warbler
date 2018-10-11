@@ -10,7 +10,11 @@ db.create_all()
 class ApplicationTest(unittest.TestCase):
 
     def setUp(self):
-        """Set up our test client and make a new cupcake for each test to work with"""
+        '''
+        Set up our test client and make a new message, user and like
+        for each test to work with
+        '''
+
         self.client = app.test_client()
         new_message = Message(
             id=1,
@@ -42,7 +46,10 @@ class ApplicationTest(unittest.TestCase):
         db.session.commit()
 
     def tearDown(self):
-        """Delete all the cupcakes from the db after each test to start with clean data"""
+        '''
+        Delete all messages, users, and likes from the db after
+        each test to start with clean data
+        '''
 
         Message.query.delete()
         User.query.delete()
@@ -50,6 +57,10 @@ class ApplicationTest(unittest.TestCase):
         db.session.commit()
 
     def test_attribute(self):
+        '''
+        Test all attributes of messages
+        '''
+
         message = Message.query.get(1)
 
         self.assertEqual(message.text, 'Testing')
@@ -61,6 +72,11 @@ class ApplicationTest(unittest.TestCase):
         self.assertNotEqual(message.timestamp, 'asdf')
 
     def test_is_liked_by(self):
+        '''
+        Test the is_liked_by function in the message class by
+        querying data and by creating a wrong user to fail
+        '''
+
         message = Message.query.get(1)
         user = User.query.get(1)
         like = Like.query.get((1, 1))
@@ -80,7 +96,7 @@ class ApplicationTest(unittest.TestCase):
         db.session.commit()
 
         message = Message.is_liked_by(user, message)
-        wrong_message = Message.is_liked_by(wrong_user, message)
-
         self.assertEqual(message, like)
+
+        wrong_message = Message.is_liked_by(wrong_user, message)
         self.assertEqual(wrong_message, None)
