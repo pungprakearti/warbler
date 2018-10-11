@@ -303,8 +303,8 @@ def messages_destroy(message_id):
 
 
 @app.route('/messages/<int:message_id>/like', methods=["POST"])
-def like_message(message_id):
-    """Like a message."""
+def like_or_unlike_message(message_id):
+    """Like or unlike a message."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -312,14 +312,31 @@ def like_message(message_id):
 
     message = Message.query.get(message_id)
 
-    if not g.user.id == message.user_id:
-        like = Like(user_id=g.user.id, message_id=message_id)
-        db.session.add(like)
-        db.session.commit()
-        return redirect("/")
+    if g.user.id == message.user_id:
+        flash("You can't like your messages. You noob.")
+    else:
+        like = Message.is_liked_by(g.user, message)
+        if like:
+            # Delete like
+            db.session.delete(like)
+            db.session.commit()
+        else:
+            # Add like
+            like = Like(user_id=g.user.id, message_id=message_id)
+            db.session.add(like)
+            db.session.commit()
 
-    flash("You can't like your messages. You noob.")
     return redirect("/")
+
+
+@app.route('/users/<int:user_id>/likes')
+def likes_show(user_id):
+    """Show user likes."""
+
+    user = User.query.get_or_404(user_id)
+    messages = user.liked_messages
+
+    return render_template('home.html', messages=messages)
 
 
 ##############################################################################

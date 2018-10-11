@@ -84,6 +84,14 @@ class User(db.Model):
 
     likes = db.relationship('Like', backref='users', lazy='dynamic')
 
+    liked_messages = db.relationship(
+        'Message',
+        secondary='likes',
+        backref=db.backref('likes_user', lazy='dynamic'),
+        lazy='dynamic')
+
+    # liked_messages = db.relationhip()  # liking_users, likers
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -165,6 +173,18 @@ class Message(db.Model):
     )
 
     likes = db.relationship('Like', backref='messages', lazy='dynamic')
+
+    @classmethod
+    def is_liked_by(cls, user, message):
+        """Checks if message is liked by user."""
+
+        like = Like.query.get((user.id, message.id)) or None
+
+        return like
+
+    # def is_liked_by(self, user):
+    #
+    #     msg    {% if msg.is_liked_by(g.user) %} ... {% else %} ...
 
 
 class Like(db.Model):
