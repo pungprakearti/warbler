@@ -218,19 +218,20 @@ def profile():
 
     form = UserEditForm(obj=g.user)
 
-    if form.validate_on_submit:
-        if not User.authenticate(g.user.username, form.data['password']):
-            flash("Incorrect password")
+    if request.method == "POST":
+        if form.validate_on_submit:
+            if not User.authenticate(g.user.username, form.data['password']):
+                flash("Incorrect password")
 
-        else:
-            g.user.username = form.data['username']
-            g.user.email = form.data['email']
-            g.user.image_url = form.data['image_url']
-            g.user.header_image_url = form.data['header_image_url']
-            g.user.bio = form.data['bio']
+            else:
+                g.user.username = form.data['username']
+                g.user.email = form.data['email']
+                g.user.image_url = form.data['image_url']
+                g.user.header_image_url = form.data['header_image_url']
+                g.user.bio = form.data['bio']
 
-            db.session.commit()
-            return redirect(f"/users/{g.user.id}")
+                db.session.commit()
+                return redirect(f"/users/{g.user.id}")
 
     return render_template('users/edit.html', form=form)
 
