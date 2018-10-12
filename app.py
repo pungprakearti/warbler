@@ -212,24 +212,25 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    user_id = session[CURR_USER_KEY]  # <------------------------ REFACTOR
-    user = User.query.get(user_id)
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
-    form = UserEditForm(obj=user)
+    form = UserEditForm(obj=g.user)
 
     if form.validate_on_submit:
-        if not User.authenticate(user.username, form.data['password']):
+        if not User.authenticate(g.user.username, form.data['password']):
             flash("Incorrect password")
 
         else:
-            user.username = form.data['username']
-            user.email = form.data['email']
-            user.image_url = form.data['image_url']
-            user.header_image_url = form.data['header_image_url']
-            user.bio = form.data['bio']
+            g.user.username = form.data['username']
+            g.user.email = form.data['email']
+            g.user.image_url = form.data['image_url']
+            g.user.header_image_url = form.data['header_image_url']
+            g.user.bio = form.data['bio']
 
             db.session.commit()
-            return redirect(f"/users/{user_id}")
+            return redirect(f"/users/{g.user.id}")
 
     return render_template('users/edit.html', form=form)
 
